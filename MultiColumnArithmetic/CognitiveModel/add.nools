@@ -157,6 +157,8 @@ function make_start(first,second){
 
 }
 
+global derefs = [["below","to_right"]];
+
 rule bootstrap {
 	when {
 		s: Boolean s === false from false;
@@ -166,12 +168,13 @@ rule bootstrap {
 		// constructor: function(n, v, l, r, a, b) {
 		make_start("727","727");
 		// assert(new MatchList("main"));
+        all_tfs = {};
 		for (var name in start_state){
-			
 			obj = start_state[name];
 			tf = new TextField(name,obj['value'],obj['to_left'],
 				obj['to_right'],obj['above'],obj['below']);
-			assert(new interfaceElement(name,obj['value'] || null));
+            all_tfs[name] = tf;
+			// assert(new interfaceElement(name,obj['value'] || null));
 			if(obj['value'] || name.includes("hidey")){
 				tf.enabled = false;
 				console.log(name,obj['value']);
@@ -180,9 +183,38 @@ rule bootstrap {
 				console.log(name,"unlock");
 				assert(new TPA(name, "unlock", true));
 			}
-			assert(tf);
-		}
+            assert(tf);
+        }
+
+        // for (var name in all_tfs){
+        //     var tf = all_tfs[name];
+        //     tf['to_left'] = all_tfs[tf['to_left']] || tf['to_left'];
+        //     tf['to_right'] = all_tfs[tf['to_right']] || tf['to_right'];
+        //     tf['above'] = all_tfs[tf['above']] || tf['above'];
+        //     tf['below'] = all_tfs[tf['below']] || tf['below'];
+            
+        // }
+
 		assert(new PhaseHandler());
+
+        for (var name in all_tfs){
+            var tf = all_tfs[name];
+            for (var deref of derefs){
+                // console.log("?",deref);
+                var obj = tf;
+                for(var i=0; i < deref.length; i++){
+                    if(obj == null){break}
+                    nxt = obj[deref[i]];
+                    console.log(obj.name,nxt);
+                    // if(nxt == null){break}
+                    obj = all_tfs[nxt] || null;
+                }
+                if(obj != null){
+                    console.log("ASSERT",obj.name);
+                    assert(new DeRef(tf,deref.join("."),obj));
+                }
+            }
+        }
 		setProblemAttribute("use_backtracking", false);
 		// setProblemAttribute("prune_old_activations", true);
 		halt();
@@ -395,7 +427,8 @@ rule Carry2 {
 		arg0.above === neigh0.name && 
 		arg0.below === arg1.name &&
 		arg1.above === arg0.name;
-		// dref1: TextField dref1.name ==
+		not(dr0: DeRef dr0.source.name === arg1.name &&
+                dr0.path === 'below.to_right' && dr0.obj.enabled == true);
 		// not(match : Match match.sel == sel.name && 
 		// 				  match.arg0 == arg0.name &&
 		// 				  match.arg1 == arg1.name)

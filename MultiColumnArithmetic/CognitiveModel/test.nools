@@ -183,30 +183,34 @@ rule bootstrap {
 				console.log(name,"unlock");
 				assert(new TPA(name, "unlock", true));
 			}
-        }
-
-        for (var name in all_tfs){
-            var tf = all_tfs[name];
-            tf['to_left'] = all_tfs[tf['to_left']] || tf['to_left'];
-            tf['to_right'] = all_tfs[tf['to_right']] || tf['to_right'];
-            tf['above'] = all_tfs[tf['above']] || tf['above'];
-            tf['below'] = all_tfs[tf['below']] || tf['below'];
             assert(tf);
         }
+
+        // for (var name in all_tfs){
+        //     var tf = all_tfs[name];
+        //     tf['to_left'] = all_tfs[tf['to_left']] || tf['to_left'];
+        //     tf['to_right'] = all_tfs[tf['to_right']] || tf['to_right'];
+        //     tf['above'] = all_tfs[tf['above']] || tf['above'];
+        //     tf['below'] = all_tfs[tf['below']] || tf['below'];
+            
+        // }
 
 		assert(new PhaseHandler());
 
         for (var name in all_tfs){
             var tf = all_tfs[name];
             for (var deref of derefs){
-                console.log("?",deref);
-                obj = tf;
+                // console.log("?",deref);
+                var obj = tf;
                 for(var i=0; i < deref.length; i++){
                     if(obj == null){break}
-                    obj = obj[deref[i]] || null;
+                    nxt = obj[deref[i]];
+                    console.log(obj.name,nxt);
+                    if(nxt == null){break}
+                    obj = all_tfs[nxt];
                 }
                 if(obj != null){
-                    console.log("ASSERT",deref);
+                    console.log("ASSERT",obj.name);
                     assert(new DeRef(tf,deref.join("."),obj));
                 }
             }
@@ -216,18 +220,6 @@ rule bootstrap {
 		halt();
 	}
 }
-
-
-
-
-// rule AssertDerefs {
-//     when {
-//         tf : TextField;
-//     }
-//     then{
-        
-//     }
-// }
 
 /// Phase Control flow: 0)Start-> 1)Match-> 2)Resolve-> 3)Check-> 4)Report-> Reset
 rule startMatching {
@@ -301,7 +293,6 @@ rule checkMatches {
 		match : Match match.is_correct == false;
 	}
 	then{
-
 		console.log("Check", match, match.full_fired, match.sel,match.input);
 		if(match.full_fired){
 			conflict_set.push(match);
@@ -338,7 +329,7 @@ rule Noodle {
     when {
         ph : PhaseHandler;
         arg0: TextField arg0.enabled === false && arg0.value == "7";
-        arg1: TextField arg1.enabled === false && arg1.value == "7" && arg0.name != arg1.name;
+        arg1: TextField arg1.enabled === false && arg1.value == "7";// && arg0.name != arg1.name;
         dr0: DeRef dr0.source.name === arg0.name &&
                 dr0.path === 'to_left.to_left' && dr0.obj.value == "7";
         dr1: DeRef dr1.source.name === arg1.name &&
