@@ -1,0 +1,356 @@
+import("types.nools");
+
+
+
+
+global start_state = {
+    "inpA1": {
+        "type" : "TextField",
+        "value": 7,
+        "above": "hidey1",
+        "below": "inpB1",
+        "to_left" : "inpA2",
+        "to_right": null,
+    },
+    "inpA2": {
+        "type" : "TextField",
+        "value": 7,
+        "above": "carry1",
+        "below": "inpB2",
+        "to_left" : "inpA3",
+        "to_right": "inpA1",
+    },
+    "inpA3": {
+        "type" : "TextField",
+        "value": 7,
+        "above": "carry2",
+        "below": "inpB3",
+        "to_left" : "hidey2",
+        "to_right": "inpA2",
+    },
+    "inpB1": {
+        "type" : "TextField",
+        "value": 7,
+        "above": "inpA1",
+        "below": "out1",
+        "to_left" : "inpB2",
+        "to_right": null,
+    },
+    "inpB2": {
+        "type" : "TextField",
+        "value": 7,
+        "above": "inpA2",
+        "below": "out2",
+        "to_left" : "inpB3",
+        "to_right": "inpB1",
+    },
+    "inpB3": {
+        "type" : "TextField",
+        "value": 7,
+        "above": "inpA3",
+        "below": "out3",
+        "to_left" : "hidey3",
+        "to_right": "inpB2",
+    },
+    "out1": {
+        "type" : "TextField",
+        "value": "",
+        "above": "inpB1",
+        "below": null,
+        "to_left" : "out2",
+        "to_right": null,
+    },
+    "out2": {
+        "type" : "TextField",
+        "value": "",
+        "above": "inpB2",
+        "below": null,
+        "to_left" : "out3",
+        "to_right": "out1",
+    },
+    "out3": {
+        "type" : "TextField",
+        "value": "",
+        "above": "inpB3",
+        "below": null,
+        "to_left" : "out4",
+        "to_right": "out2",
+    },
+    "out4": {
+        "type" : "TextField",
+        "value": "",
+        "above": "hidey3",
+        "below": null,
+        "to_left" : null,
+        "to_right": "out3",
+    },
+    "carry1": {
+        "type" : "TextField",
+        "value": "",
+        "above": null,
+        "below": "inpA2",
+        "to_left" : "carry2",
+        "to_right": "hidey1",
+    },
+    "carry2": {
+        "type" : "TextField",
+        "value": "",
+        "above": null,
+        "below": "inpA3",
+        "to_left" : "carry3",
+        "to_right": "carry1",
+    },
+    "carry3": {
+        "type" : "TextField",
+        "value": "",
+        "above": null,
+        "below": "hidey2",
+        "to_left" : "carry4",
+        "to_right": "carry2",
+    },
+    "hidey1": {
+        "type" : "TextField",
+        "value": "",
+        "above": null,
+        "below": "inpA1",
+        "to_left" : "carry1",
+        "to_right": null,
+    },
+    "hidey2": {
+        "type" : "TextField",
+        "value": "",
+        "above": "carry3",
+        "below": "hidey3",
+        "to_left" : null,
+        "to_right": "inpA3",
+    },
+    "hidey3": {
+        "type" : "TextField",
+        "value": "",
+        "above": "hidey3",
+        "below": "out4",
+        "to_left" : null,
+        "to_right": "inpB3",
+    },
+
+};
+
+global conflict_set = [];
+// var matches = [];
+// var full_matches = [];
+
+function make_start(first,second){
+	var i = 3;
+	for (var x of first.split("")){
+		console.log(x);
+		start_state['inpA' + String(i)]['value'] = x;
+		i--;
+		if(i==0){break}
+	}
+	var i = 3;
+	for (var x of second.split("")){
+		console.log(x);
+		start_state['inpB' + String(i)]['value'] = x;
+		i--;
+		if(i==0){break}
+	}
+
+}
+
+global derefs = [["to_left","to_left"]];
+
+rule bootstrap {
+	when {
+		s: Boolean s === false from false;
+	}
+	then {
+		console.log("nooooools sss start");
+		// constructor: function(n, v, l, r, a, b) {
+		make_start("727","727");
+		// assert(new MatchList("main"));
+        all_tfs = {};
+		for (var name in start_state){
+			obj = start_state[name];
+			tf = new TextField(name,obj['value'],obj['to_left'],
+				obj['to_right'],obj['above'],obj['below']);
+            all_tfs[name] = tf;
+			// assert(new interfaceElement(name,obj['value'] || null));
+			if(obj['value'] || name.includes("hidey")){
+				tf.enabled = false;
+				console.log(name,obj['value']);
+				assert(new TPA(name,"UpdateTextField", obj['value']));
+			}else{
+				console.log(name,"unlock");
+				assert(new TPA(name, "unlock", true));
+			}
+        }
+
+        for (var name in all_tfs){
+            var tf = all_tfs[name];
+            tf['to_left'] = all_tfs[tf['to_left']] || tf['to_left'];
+            tf['to_right'] = all_tfs[tf['to_right']] || tf['to_right'];
+            tf['above'] = all_tfs[tf['above']] || tf['above'];
+            tf['below'] = all_tfs[tf['below']] || tf['below'];
+            assert(tf);
+        }
+
+		assert(new PhaseHandler());
+
+        for (var name in all_tfs){
+            var tf = all_tfs[name];
+            for (var deref of derefs){
+                console.log("?",deref);
+                obj = tf;
+                for(var i=0; i < deref.length; i++){
+                    if(obj == null){break}
+                    obj = obj[deref[i]] || null;
+                }
+                if(obj != null){
+                    console.log("ASSERT",deref);
+                    assert(new DeRef(tf,deref.join("."),obj));
+                }
+            }
+        }
+		setProblemAttribute("use_backtracking", false);
+		// setProblemAttribute("prune_old_activations", true);
+		halt();
+	}
+}
+
+
+
+
+// rule AssertDerefs {
+//     when {
+//         tf : TextField;
+//     }
+//     then{
+        
+//     }
+// }
+
+/// Phase Control flow: 0)Start-> 1)Match-> 2)Resolve-> 3)Check-> 4)Report-> Reset
+rule startMatching {
+	when {
+		ph : PhaseHandler ph.phase == 0;
+	}
+	then{
+		conflict_set.splice(0,conflict_set.length); //Empty it
+		console.log("START MATCHING");
+		focus("phase1");
+		modify(ph,"phase", 1);
+	}
+
+}
+
+rule startResolving {
+	when {
+		ph : PhaseHandler ph.phase == 1;
+	}
+	then{
+		console.log("START Resolving");
+		focus("phase2");
+		modify(ph,"phase", 2);
+	}
+
+}
+
+rule startChecking {
+	when {
+		ph : PhaseHandler ph.phase == 2;
+	}
+	then{
+		console.log("START Checking");
+		focus("phase3");
+		modify(ph,"phase", 3);
+	}
+}
+
+rule reportCorrectness {
+	when {
+		ph : PhaseHandler ph.phase == 3;
+	}
+	then{
+		console.log("START Correctness");
+		focus("phase4");
+		modify(ph,"phase", 4);
+	}
+}
+
+rule resetting {
+	when {
+		ph : PhaseHandler ph.phase == 4;
+	}
+	then{
+		// console.log("Step Done");
+		console.log("conflict_set");
+		for (var x of conflict_set){
+			console.log(x.rhs,x.args,x.sel, "->", x.input);
+		}
+		modify(ph,"phase", 0);
+		modify(ph,"cycle", ph.cycle+1);
+		halt();
+	}
+}
+
+//////////// Check Rules ///////////////// 
+
+rule checkMatches {
+	agenda-group: "phase3";
+	when {
+		match : Match match.is_correct == false;
+	}
+	then{
+
+		console.log("Check", match, match.full_fired, match.sel,match.input);
+		if(match.full_fired){
+			conflict_set.push(match);
+			if(checkSAI({selection: match.sel, action: match.action, input: match.input})) {
+				console.log("SAI MATCHES!");
+				modify(match, "is_correct", true);
+				return
+			}
+		}
+		retract(match);
+	}
+}
+
+rule positive_feedback{
+	agenda-group: "phase4";
+	when {
+		match : Match match.is_correct == true;
+		sel : TextField sel.name == match.sel;
+	}
+	then{
+		console.log("Correct", match.rhs,match.args);
+		if(checkSAI({selection: match.sel, action: match.action, input: match.input})) {
+			modify(sel, "value", match.input);
+			modify(sel, "enabled", false);
+			retract(match);
+		}
+		
+	}
+}
+
+
+rule Noodle {
+    agenda-group: "phase1";
+    when {
+        ph : PhaseHandler;
+        arg0: TextField arg0.enabled === false && arg0.value == "7";
+        arg1: TextField arg1.enabled === false && arg1.value == "7" && arg0.name != arg1.name;
+        dr0: DeRef dr0.source.name === arg0.name &&
+                dr0.path === 'to_left.to_left' && dr0.obj.value == "7";
+        dr1: DeRef dr1.source.name === arg1.name &&
+                dr1.path === 'to_left.to_left' && dr1.obj.value == "7";
+    }
+    then {
+        console.log(dr0.obj.name || null);
+        console.log(dr1.obj.name || null);
+        console.log(arg0.name || null);
+        console.log(arg1.name || null);
+        // console.log(arg1.to_left.to_left.value || null);
+        console.log("NOOOOOOOOODLE!");
+    }
+}
+

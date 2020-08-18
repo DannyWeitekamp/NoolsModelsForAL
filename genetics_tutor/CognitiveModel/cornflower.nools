@@ -1,0 +1,38 @@
+import("productionrules.nools");
+
+global probname = "cornflower";
+global probtxt = "Cornflower is an annual flowering plant in the family Asteraceae, native to Europe. Normally the flowers are yellow, but in one location, white flowers are also found.  Plants with both yellow and white flowers were collected.  Make crosses between the three strains provided to determine all you can about their genotypes.";
+
+global strain1 = {n: 1, name: "Yellow-1", phenotype: "yellow"};
+global strain2 = {n: 2, name: "White-1", phenotype: "white"};
+global strain3 = {n: 3, name: "White-2", phenotype: "white"};
+
+global cross1 = {strains: ["Yellow-1", "Yellow-1"],
+				offspringExt: "75% Yellow, 25% White",
+				offspringInt: [75, "yellow", 25, "white"]
+			};
+			
+global cross2 = {strains: ["Yellow-1", "White-1"],
+				offspringExt: "50% Yellow, 50% White",
+				offspringInt: [50, "yellow", 50, "white"]
+			};
+
+global cross3 = {strains: ["Yellow-1", "White-2"],
+				offspringExt: "50% Yellow, 50% White",
+				offspringInt: [50, "yellow", 50, "white"]
+			};
+
+global cross4 = {strains: ["White-1", "White-1"],
+				offspringExt: "100% White",
+				offspringInt: [100, "white"]
+			};
+			
+global cross5 = {strains: ["White-1", "White-2"],
+				offspringExt: "100% White",
+				offspringInt: [100, "white"]
+			};
+
+global cross6 = {strains: ["White-2", "White-2"],
+				offspringExt: "100% White",
+				offspringInt: [100, "white"]
+			};
