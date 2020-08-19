@@ -5,6 +5,13 @@
 // but the types that are provided may not have all the slots that are necessary.
 //
 
+define Button {
+	name: null,
+	constructor: function(n) {
+		this.name = n;
+	}
+}
+
 define TextField {
 	name: null,
 	value: null,
